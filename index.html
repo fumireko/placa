@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/png" href="favico.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="placa.fubi.ca">
+    <meta name="keywords" content="placa, fipe, fubica, fubi, ca, fumi, reko, fumireko">
+    <meta property="og:title" content="placa.fubi.ca">
+    <meta property="og:image" content="http://fubi.ca/favico.png">
+    <meta property="og:description" content="Placa fubica">
+    <meta property="og:site_name" content="placa.fubi.ca">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@fumireko">
+    <meta name="twitter:title" content="placa.fubi.ca">
+    <meta name="twitter:description" content="Placa fubica">
+    <meta name="twitter:image" content="http://fubi.ca/favico.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+      #loading {
+        width: 2rem;
+        height: 2rem;
+        border: 5px solid #f3f3f3;
+        border-top: 6px solid #0d6efd;
+        border-radius: 50%;
+        margin: auto;
+        visibility: hidden;
+        animation: spin 1s infinite linear;
+      }
+
+      #loading.display {
+        visibility: visible;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mx-auto mt-3">
+      <div class="input-group mb-3">
+        <input class="form-control" type="text" id="placa" placeholder="ABC0A00"></input>
+        <button class="btn btn-primary" type="submit" id="btn">Buscar</button>
+      </div>
+      <div id="loading"></div>
+      <div id="output"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        const $loader = $("#loading");
+        const url = "https://placa.fubi.ca";
+        $("#btn").on("click", function() {
+          $loader.addClass("display");
+          $.ajax({
+            type: "GET",
+            url: `${url}/p/${$("#placa").val()}`,
+            dataType: "json",
+            success: function(json) {
+              $loader.removeClass("display");
+              displayData(json);
+            }
+          });
+        });
+        $("#placa").on("input", function() {
+          const regex = /^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$|^[A-Z]{3}[0-9]{4}$/;
+          const value = $(this).val().toUpperCase();
+          $(this).val(value); // Define o valor do input para maiúsculas
+          if (!regex.test(value)) {
+            $(this).addClass('is-invalid').removeClass('is-valid');
+          } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+          }
+        });
+
+        function displayData(data) {
+          const output = `
+                    
+																				<h3>Placa ${data.placa}</h3>
+																				<table class="mb-3">
+																					<tr>
+																						<th>Segmento</th>
+																						<td>${data.segmento}</td>
+																					</tr>
+																					<tr>
+																						<th>Marca/Modelo</th>
+																						<td>${data.marca}/${data.modelo}</td>
+																					</tr>
+																					<tr>
+																						<th>Ano</th>
+																						<td>${data.ano}</td>
+																					</tr>
+																					<tr>
+																						<th>Cor</th>
+																						<td>${data.cor}</td>
+																					</tr>
+																					<tr>
+																						<th>Chassi</th>
+																						<td>${data.chassi}</td>
+																					</tr>
+																					<tr>
+																						<th>Município</th>
+																						<td>${data.municipio} - ${data.UF}</td>
+																					</tr>
+																				</table>
+																				<table class="mb-3">
+																					<tr>
+																						<th>Motor</th>
+																						<td>${data.motor || 'N/D'}</td>
+																					</tr>
+																					<tr>
+																						<th>Cilindrada</th>
+																						<td>${data.cilindrada}</td>
+																					</tr>
+																					<tr>
+																						<th>Potência</th>
+																						<td>${data.potencia} cv</td>
+																					</tr>
+																					<tr>
+																						<th>Combustível</th>
+																						<td>${data.combustivel}</td>
+																					</tr>
+																				</table>
+																				<hr>
+																					<h3>Tabela FIPE</h3>
+                    ${data.fipe.length > 0 ? `
+                    
+																					<table class="mb-5">
+																						<tr>
+																							<th>Código FIPE</th>
+																							<th>Modelo</th>
+																							<th>Valor (R$)</th>
+																						</tr>
+                        ${data.fipe.map(fipe => `
+                            
+																						<tr>
+																							<td>${fipe.codigo_fipe}</td>
+																							<td>${fipe.modelo}</td>
+																							<td>${fipe.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+																						</tr>
+                        `).join('')}
+                    
+																					</table>
+                    ` : `
+																					<p>Não há dados disponíveis da tabela FIPE!</p>`}
+                `;
+          $("#output").html(output);
+        }
+      });
+    </script>
+  </body>
+</html>
